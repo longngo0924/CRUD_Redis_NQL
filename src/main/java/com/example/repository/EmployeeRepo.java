@@ -1,10 +1,12 @@
 package com.example.repository;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Repository;
 
 import com.example.entity.Employee;
@@ -13,13 +15,15 @@ import com.example.entity.Employee;
 public class EmployeeRepo {
 	private HashOperations hashOperations;// crud hash
 	private ListOperations listOperations;
+	private SetOperations setOperations;
 
 	private RedisTemplate redisTemplate;
 
 	public EmployeeRepo(RedisTemplate redisTemplate) {
 
 //		this.hashOperations = redisTemplate.opsForHash();
-		this.listOperations = redisTemplate.opsForList();
+//		this.listOperations = redisTemplate.opsForList();
+		this.setOperations = redisTemplate.opsForSet();
 		this.redisTemplate = redisTemplate;
 
 	}
@@ -27,19 +31,21 @@ public class EmployeeRepo {
 	public void saveEmployee(Employee employee) {
 
 //		hashOperations.put("EMPLOYEE", employee.getId(), employee);
-		listOperations.rightPush("EMPLOYEE", employee);
+//		listOperations.rightPush("EMPLOYEE", employee);
+		setOperations.add("EMPLOYEE", employee);
+
 	}
 
-	public List<Employee> findAll() {
+	public Set<Employee> findAll() {
 
 //		return hashOperations.values("EMPLOYEE");
-		return listOperations.range("EMPLOYEE", 0, 10);
+		return setOperations.members("EMPLOYEE");
 	}
 
 	public Employee findById(Integer id) {
 
 //		return (Employee) hashOperations.get("EMPLOYEE", id);
-		return (Employee) listOperations.index("EMPLOYEE", id);
+		return (Employee) setOperations.intersect("EMPLOYEE", id);
 	}
 
 	public void update(Employee employee) {
@@ -48,6 +54,6 @@ public class EmployeeRepo {
 
 	public void delete(Integer id) {
 //		hashOperations.delete("EMPLOYEE", id);
-		listOperations.remove("EMPLOYEE", 0, id);
+		setOperations.remove("EMPLOYEE", 0, id);
 	}
 }
